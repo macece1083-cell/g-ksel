@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>B1 Grammar Question Generator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel controls">
+        <div class="brand">
+          <div>
+            <p class="eyebrow">B1 Grammar Practice</p>
+            <h1>Question Generator</h1>
+          </div>
+          <button id="randomizeBtn" class="icon-button" title="Random settings" type="button">R</button>
+        </div>
+
+        <div class="control-grid">
+          <label>
+            Grammar topic
+            <select id="topicSelect"></select>
+          </label>
+
+          <label>
+            Question type
+            <select id="typeSelect"></select>
+          </label>
+
+          <label>
+            Number of questions
+            <input id="countInput" type="number" min="1" max="40" value="12" />
+          </label>
+
+          <label>
+            Level
+            <select id="levelSelect">
+              <option value="b1" selected>B1 Intermediate</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="topic-tools">
+          <button id="selectAllTopics" type="button">All topics</button>
+          <button id="clearTopics" type="button">Clear</button>
+        </div>
+
+        <div id="topicChips" class="chips"></div>
+
+        <div class="actions">
+          <button id="generateBtn" class="primary" type="button">Generate new quiz</button>
+          <button id="checkBtn" type="button">Check answers</button>
+          <button id="revealBtn" type="button">Reveal answers</button>
+          <button id="printBtn" type="button">Print</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="sheet-head">
+          <div>
+            <p class="eyebrow">Interactive Quiz</p>
+            <h2 id="worksheetTitle">Mixed B1 grammar practice</h2>
+          </div>
+          <div class="meta">
+            <span id="questionCount">0 questions</span>
+            <span id="topicCount">0 topics</span>
+            <span id="scoreBox">Not checked</span>
+          </div>
+        </div>
+
+        <div id="questions" class="questions empty">
+          <p>Choose your settings and generate a new B1 quiz.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
