@@ -1,0 +1,9 @@
+{
+  "name": "b1-grammar-question-generator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "python -m http.server 4173",
+    "check": "node --check app.js"
+  }
+}
