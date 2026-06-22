@@ -1,8 +1,8 @@
-import asyncio
+﻿import asyncio
 import subprocess
+import tempfile
 from pathlib import Path
 
-import edge_tts
 import requests
 
 from .config import Settings
@@ -13,22 +13,19 @@ def generate_voice(plan: VideoPlan, output: Path, settings: Settings) -> Path:
     text = "\n".join(slide.narration for slide in plan.slides)
     if settings.tts_provider.lower() == "ttsmaker":
         _save_ttsmaker(text, output, settings)
-    elif settings.tts_provider.lower() == "sapi":
-        output = output.with_suffix(".wav")
-        _save_windows_sapi(text, output)
     else:
         try:
-            asyncio.run(_save_edge_voice(text, output, settings.tts_voice))
+            _save_gtts(text, output)
         except Exception as exc:
-            print(f"Edge TTS kullanilamadi, Windows SAPI'ye geciliyor: {exc}")
-            output = output.with_suffix(".wav")
-            _save_windows_sapi(text, output)
+            print(f"gTTS kullanilamadi: {exc}")
+            raise
     return output
 
 
-async def _save_edge_voice(text: str, output: Path, voice: str) -> None:
-    communicate = edge_tts.Communicate(text, voice)
-    await communicate.save(str(output))
+def _save_gtts(text: str, output: Path) -> None:
+    from gtts import gTTS
+    tts = gTTS(text=text, lang="en", slow=False)
+    tts.save(str(output))
 
 
 def _save_ttsmaker(text: str, output: Path, settings: Settings) -> None:
@@ -61,24 +58,3 @@ def _save_ttsmaker(text: str, output: Path, settings: Settings) -> None:
     audio_response = requests.get(audio_url, timeout=120)
     audio_response.raise_for_status()
     output.write_bytes(audio_response.content)
-
-
-def _save_windows_sapi(text: str, output: Path) -> None:
-    text_path = output.with_suffix(".txt")
-    text_path.write_text(text, encoding="utf-8")
-    script = f"""
-Add-Type -AssemblyName System.Speech
-$text = Get-Content -LiteralPath '{_ps_escape(str(text_path))}' -Raw
-$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-$synth.Rate = 0
-$synth.Volume = 100
-$synth.SetOutputToWaveFile('{_ps_escape(str(output))}')
-$synth.Speak($text)
-$synth.Dispose()
-"""
-    subprocess.run(["powershell", "-NoProfile", "-Command", script], check=True, capture_output=True, text=True)
-    text_path.unlink(missing_ok=True)
-
-
-def _ps_escape(value: str) -> str:
-    return value.replace("'", "''")
