@@ -1,0 +1,6 @@
+.vercel
+node_modules
+github-source
+*.wav
+*.mp3
+*.mp4

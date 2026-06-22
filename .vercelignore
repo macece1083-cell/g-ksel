@@ -1,0 +1,7 @@
+.git
+github-source
+*.wav
+*.mp3
+*.mp4
+node_modules
+README.local.md
