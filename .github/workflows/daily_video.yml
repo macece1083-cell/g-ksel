@@ -1,4 +1,4 @@
-name: Daily English Video
+﻿name: Daily English Video
 
 on:
   schedule:
@@ -9,8 +9,8 @@ on:
         description: "English level (A1/A2/B1/B2/C1/C2)"
         default: "B1"
       topic:
-        description: "Topic"
-        default: "daily vocabulary"
+        description: "Topic (or 'auto' for random)"
+        default: "auto"
       upload:
         description: "Upload to YouTube?"
         type: boolean
@@ -43,19 +43,18 @@ jobs:
         working-directory: youtube_english_bot
         env:
           TTSMAKER_API_KEY: ${{ secrets.TTSMAKER_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          cat > .env <<EOF
-          BOT_PROVIDER=template
-          TTS_PROVIDER=edge
-          TTS_VOICE=en-US-JennyNeural
-          IMAGE_PROVIDER=pollinations
-          VIDEO_WIDTH=1920
-          VIDEO_HEIGHT=1080
-          DEFAULT_PRIVACY_STATUS=private
-          TTSMAKER_API_KEY=${TTSMAKER_API_KEY}
-          YOUTUBE_CLIENT_SECRETS=client_secret.json
-          YOUTUBE_TOKEN_FILE=token.json
-          EOF
+          printf '%s\n' "BOT_PROVIDER=claude" > .env
+          printf '%s\n' "TTS_PROVIDER=gtts" >> .env
+          printf '%s\n' "IMAGE_PROVIDER=pollinations" >> .env
+          printf '%s\n' "VIDEO_WIDTH=1920" >> .env
+          printf '%s\n' "VIDEO_HEIGHT=1080" >> .env
+          printf '%s\n' "DEFAULT_PRIVACY_STATUS=private" >> .env
+          printf '%s\n' "YOUTUBE_CLIENT_SECRETS=client_secret.json" >> .env
+          printf '%s\n' "YOUTUBE_TOKEN_FILE=token.json" >> .env
+          printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY" >> .env
+          printf 'TTSMAKER_API_KEY=%s\n' "$TTSMAKER_API_KEY" >> .env
 
       - name: Restore YouTube credentials
         if: ${{ github.event.inputs.upload == 'true' }}
@@ -69,12 +68,12 @@ jobs:
 
       - name: Generate video
         working-directory: youtube_english_bot
-        run: python main.py --level "${{ github.event.inputs.level || 'B1' }}" --topic "${{ github.event.inputs.topic || 'daily vocabulary' }}"
+        run: python main.py --level "${{ github.event.inputs.level || 'B1' }}" --topic "${{ github.event.inputs.topic || 'auto' }}"
 
       - name: Upload to YouTube
         if: ${{ github.event.inputs.upload == 'true' }}
         working-directory: youtube_english_bot
-        run: python main.py --level "${{ github.event.inputs.level || 'B1' }}" --topic "${{ github.event.inputs.topic || 'daily vocabulary' }}" --upload
+        run: python main.py --level "${{ github.event.inputs.level || 'B1' }}" --topic "${{ github.event.inputs.topic || 'auto' }}" --upload
 
       - name: Save video as artifact
         uses: actions/upload-artifact@v4

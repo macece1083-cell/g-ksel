@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from pathlib import Path
 import os
 
@@ -12,10 +12,12 @@ load_dotenv(ROOT / ".env")
 @dataclass(frozen=True)
 class Settings:
     provider: str = os.getenv("BOT_PROVIDER", "template")
+    anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
+    anthropic_model: str = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
     ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
     ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
     image_provider: str = os.getenv("IMAGE_PROVIDER", "pollinations")
-    tts_provider: str = os.getenv("TTS_PROVIDER", "edge")
+    tts_provider: str = os.getenv("TTS_PROVIDER", "gtts")
     tts_voice: str = os.getenv("TTS_VOICE", "en-US-JennyNeural")
     ttsmaker_api_key: str = os.getenv("TTSMAKER_API_KEY", "")
     ttsmaker_voice_id: int = int(os.getenv("TTSMAKER_VOICE_ID", "1480"))
