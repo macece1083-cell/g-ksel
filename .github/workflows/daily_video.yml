@@ -2,7 +2,7 @@
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "0 6 * * 1,3,5"
     - cron: "0 12 * * *"
   workflow_dispatch:
     inputs:
@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install ffmpeg
         run: sudo apt-get install -y ffmpeg
@@ -78,7 +80,7 @@ jobs:
           HOUR=$(date -u +%H)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             MODE="${{ github.event.inputs.mode }}"
-            LEVEL="${{ github.event.inputs.level }}"
+            LEVEL=$(echo "${{ github.event.inputs.level }}" | tr '[:lower:]' '[:upper:]')
             TOPIC="${{ github.event.inputs.topic }}"
           elif [ "$HOUR" -lt 10 ]; then
             MODE="meb"
@@ -99,24 +101,64 @@ jobs:
           echo "topic=$TOPIC" >> $GITHUB_OUTPUT
           echo "playlist=$PLAYLIST" >> $GITHUB_OUTPUT
 
+      - name: Read MEB counter
+        id: counter
+        if: ${{ steps.params.outputs.mode == 'meb' }}
+        run: |
+          if [ -f youtube_english_bot/meb_counter.txt ]; then
+            N=$(cat youtube_english_bot/meb_counter.txt)
+          else
+            N=0
+          fi
+          echo "value=$N" >> $GITHUB_OUTPUT
+
       - name: Generate video
         working-directory: youtube_english_bot
         run: |
-          python main.py \
-            --mode "${{ steps.params.outputs.mode }}" \
-            --level "${{ steps.params.outputs.level }}" \
-            --topic "${{ steps.params.outputs.topic }}"
+          if [ "${{ steps.params.outputs.mode }}" = "meb" ]; then
+            python main.py \
+              --mode "meb" \
+              --level "A1" \
+              --topic "auto" \
+              --day "${{ steps.counter.outputs.value || 1 }}"
+          else
+            python main.py \
+              --mode "general" \
+              --level "${{ steps.params.outputs.level }}" \
+              --topic "${{ steps.params.outputs.topic }}"
+          fi
 
       - name: Upload to YouTube
         if: ${{ github.event.inputs.upload == 'true' || github.event_name == 'schedule' }}
         working-directory: youtube_english_bot
         run: |
-          python main.py \
-            --mode "${{ steps.params.outputs.mode }}" \
-            --level "${{ steps.params.outputs.level }}" \
-            --topic "${{ steps.params.outputs.topic }}" \
-            --playlist "${{ steps.params.outputs.playlist }}" \
-            --upload
+          if [ "${{ steps.params.outputs.mode }}" = "meb" ]; then
+            python main.py \
+              --mode "meb" \
+              --level "A1" \
+              --topic "auto" \
+              --day "${{ steps.counter.outputs.value || 1 }}" \
+              --playlist "${{ steps.params.outputs.playlist }}" \
+              --upload
+          else
+            python main.py \
+              --mode "general" \
+              --level "${{ steps.params.outputs.level }}" \
+              --topic "${{ steps.params.outputs.topic }}" \
+              --playlist "${{ steps.params.outputs.playlist }}" \
+              --upload
+          fi
+
+      - name: Update MEB counter
+        if: ${{ steps.params.outputs.mode == 'meb' && (github.event.inputs.upload == 'true' || github.event_name == 'schedule') }}
+        run: |
+          N=${{ steps.counter.outputs.value || 0 }}
+          echo $((N + 1)) > youtube_english_bot/meb_counter.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add youtube_english_bot/meb_counter.txt
+          git commit -m "Update MEB counter to $((N + 1))" || true
+          git push
 
       - name: Save video as artifact
         uses: actions/upload-artifact@v4
