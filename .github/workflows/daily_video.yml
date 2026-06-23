@@ -3,8 +3,12 @@
 on:
   schedule:
     - cron: "0 6 * * *"
+    - cron: "0 12 * * *"
   workflow_dispatch:
     inputs:
+      mode:
+        description: "Mode (general / meb)"
+        default: "general"
       level:
         description: "English level (A1/A2/B1/B2/C1/C2)"
         default: "B1"
@@ -59,7 +63,7 @@ jobs:
           printf 'TTSMAKER_API_KEY=%s\n' "$TTSMAKER_API_KEY" >> .env
 
       - name: Restore YouTube credentials
-        if: ${{ github.event.inputs.upload == 'true' }}
+        if: ${{ github.event.inputs.upload == 'true' || github.event_name == 'schedule' }}
         working-directory: youtube_english_bot
         env:
           CLIENT_SECRETS: ${{ secrets.YOUTUBE_CLIENT_SECRETS_JSON }}
@@ -68,14 +72,51 @@ jobs:
           printf '%s' "$CLIENT_SECRETS" > client_secret.json
           printf '%s' "$TOKEN_JSON" > token.json
 
+      - name: Determine mode and playlist
+        id: params
+        run: |
+          HOUR=$(date -u +%H)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="${{ github.event.inputs.mode }}"
+            LEVEL="${{ github.event.inputs.level }}"
+            TOPIC="${{ github.event.inputs.topic }}"
+          elif [ "$HOUR" -lt 10 ]; then
+            MODE="meb"
+            LEVEL="A1"
+            TOPIC="auto"
+          else
+            MODE="general"
+            LEVEL="B1"
+            TOPIC="auto"
+          fi
+          if [ "$MODE" = "meb" ]; then
+            PLAYLIST="PLQPXBueW5e7Eze3bu-ICM0mlTeCdmaVRL"
+          else
+            PLAYLIST="PLQPXBueW5e7FnRkzTsfHFHJLxlDORJiWC"
+          fi
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+          echo "level=$LEVEL" >> $GITHUB_OUTPUT
+          echo "topic=$TOPIC" >> $GITHUB_OUTPUT
+          echo "playlist=$PLAYLIST" >> $GITHUB_OUTPUT
+
       - name: Generate video
         working-directory: youtube_english_bot
-        run: python main.py --level "${{ github.event.inputs.level || 'B1' }}" --topic "${{ github.event.inputs.topic || 'auto' }}"
+        run: |
+          python main.py \
+            --mode "${{ steps.params.outputs.mode }}" \
+            --level "${{ steps.params.outputs.level }}" \
+            --topic "${{ steps.params.outputs.topic }}"
 
       - name: Upload to YouTube
-        if: ${{ github.event.inputs.upload == 'true' }}
+        if: ${{ github.event.inputs.upload == 'true' || github.event_name == 'schedule' }}
         working-directory: youtube_english_bot
-        run: python main.py --level "${{ github.event.inputs.level || 'B1' }}" --topic "${{ github.event.inputs.topic || 'auto' }}" --upload
+        run: |
+          python main.py \
+            --mode "${{ steps.params.outputs.mode }}" \
+            --level "${{ steps.params.outputs.level }}" \
+            --topic "${{ steps.params.outputs.topic }}" \
+            --playlist "${{ steps.params.outputs.playlist }}" \
+            --upload
 
       - name: Save video as artifact
         uses: actions/upload-artifact@v4
