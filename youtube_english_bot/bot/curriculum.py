@@ -1,4 +1,4 @@
-﻿CURRICULUM = [
+CURRICULUM_5 = [
     {"unit": 1, "lesson": 1, "topic": "Hello", "outcome": "Greet people and introduce yourself using Hello, Hi, Good morning, My name is"},
     {"unit": 1, "lesson": 2, "topic": "Hello", "outcome": "Ask and answer questions about names and ages: What is your name? How old are you?"},
     {"unit": 1, "lesson": 3, "topic": "Hello", "outcome": "Say the alphabet A to Z and spell simple names and words"},
@@ -49,14 +49,53 @@
     {"unit": 8, "lesson": 6, "topic": "Seasons and Weather", "outcome": "Review and practise Unit 8: seasons, weather vocabulary, activities"},
 ]
 
-
-def get_lesson(video_number: int) -> dict:
-    idx = (video_number - 1) % len(CURRICULUM)
-    lesson = CURRICULUM[idx]
-    return {
-        "unit": lesson["unit"],
-        "lesson": lesson["lesson"],
-        "topic": lesson["topic"],
-        "outcome": lesson["outcome"],
-        "video_number": video_number,
-    }
+CURRICULUM_6 = [
+    {"unit": 1, "lesson": 1, "topic": "Life", "outcome": "Describe daily routines using simple present: I wake up at 7, I have breakfast, I go to school"},
+    {"unit": 1, "lesson": 2, "topic": "Life", "outcome": "Tell the time and talk about schedules: It is half past eight, My lesson starts at nine"},
+    {"unit": 1, "lesson": 3, "topic": "Life", "outcome": "Use frequency adverbs: always, usually, often, sometimes, rarely, never"},
+    {"unit": 1, "lesson": 4, "topic": "Life", "outcome": "Ask and answer about daily habits: What time do you wake up? What do you do after school?"},
+    {"unit": 1, "lesson": 5, "topic": "Life", "outcome": "Describe weekend activities and compare them to weekday routines"},
+    {"unit": 1, "lesson": 6, "topic": "Life", "outcome": "Review and practise Unit 1: daily routines, telling the time, frequency adverbs"},
+    {"unit": 2, "lesson": 1, "topic": "Celebrations", "outcome": "Name celebrations and festivals: birthday, New Year, national holiday, Eid, harvest festival"},
+    {"unit": 2, "lesson": 2, "topic": "Celebrations", "outcome": "Describe how people celebrate: They eat special food, They wear traditional clothes, They dance"},
+    {"unit": 2, "lesson": 3, "topic": "Celebrations", "outcome": "Use present continuous to describe celebrations happening now: People are dancing and singing"},
+    {"unit": 2, "lesson": 4, "topic": "Celebrations", "outcome": "Write and say greetings for special occasions: Happy Birthday, Happy New Year, Congratulations"},
+    {"unit": 2, "lesson": 5, "topic": "Celebrations", "outcome": "Compare celebrations in Turkey and other countries using but and however"},
+    {"unit": 2, "lesson": 6, "topic": "Celebrations", "outcome": "Review and practise Unit 2: festivals, celebrations vocabulary, greetings"},
+    {"unit": 3, "lesson": 1, "topic": "My Environment", "outcome": "Describe natural features: mountains, rivers, forests, plains, coasts, lakes"},
+    {"unit": 3, "lesson": 2, "topic": "My Environment", "outcome": "Talk about environmental problems: pollution, deforestation, litter, waste"},
+    {"unit": 3, "lesson": 3, "topic": "My Environment", "outcome": "Use should and should not to give advice about protecting the environment"},
+    {"unit": 3, "lesson": 4, "topic": "My Environment", "outcome": "Describe your local environment and what you love about where you live"},
+    {"unit": 3, "lesson": 5, "topic": "My Environment", "outcome": "Talk about ways to help the environment: recycle, save water, plant trees, use less plastic"},
+    {"unit": 3, "lesson": 6, "topic": "My Environment", "outcome": "Review and practise Unit 3: environment vocabulary, giving advice with should"},
+    {"unit": 4, "lesson": 1, "topic": "Food and Restaurants", "outcome": "Read a menu and name dishes: starter, main course, dessert, drink"},
+    {"unit": 4, "lesson": 2, "topic": "Food and Restaurants", "outcome": "Order food politely: I would like, Could I have, What do you recommend?"},
+    {"unit": 4, "lesson": 3, "topic": "Food and Restaurants", "outcome": "Use much and many: How much sugar? How many eggs? There is not much time"},
+    {"unit": 4, "lesson": 4, "topic": "Food and Restaurants", "outcome": "Describe tastes and textures: sweet, salty, sour, spicy, crunchy, soft, delicious"},
+    {"unit": 4, "lesson": 5, "topic": "Food and Restaurants", "outcome": "Have a restaurant dialogue: greet customers, take orders, ask for the bill"},
+    {"unit": 4, "lesson": 6, "topic": "Food and Restaurants", "outcome": "Review and practise Unit 4: restaurant vocabulary, ordering food, much and many"},
+    {"unit": 5, "lesson": 1, "topic": "Sports", "outcome": "Name sports and equipment: football, basketball, swimming, tennis racket, goalkeeper"},
+    {"unit": 5, "lesson": 2, "topic": "Sports", "outcome": "Talk about sports using play, go, do: I play basketball, I go swimming, I do gymnastics"},
+    {"unit": 5, "lesson": 3, "topic": "Sports", "outcome": "Use simple past to talk about past sports events: They played, She scored, He won"},
+    {"unit": 5, "lesson": 4, "topic": "Sports", "outcome": "Describe a sports match: The score was, The team won by two goals, It was an exciting game"},
+    {"unit": 5, "lesson": 5, "topic": "Sports", "outcome": "Talk about your favourite sports star and why you admire them"},
+    {"unit": 5, "lesson": 6, "topic": "Sports", "outcome": "Review and practise Unit 5: sports vocabulary, play/go/do, simple past"},
+    {"unit": 6, "lesson": 1, "topic": "Occupations", "outcome": "Name jobs and say what people do: A doctor treats patients, A teacher teaches students"},
+    {"unit": 6, "lesson": 2, "topic": "Occupations", "outcome": "Talk about workplace and tools: A chef works in a kitchen and uses knives and pans"},
+    {"unit": 6, "lesson": 3, "topic": "Occupations", "outcome": "Use want to be and would like to be to talk about future jobs: I want to be an engineer"},
+    {"unit": 6, "lesson": 4, "topic": "Occupations", "outcome": "Describe skills and qualities needed for jobs: You need to be patient, creative, hardworking"},
+    {"unit": 6, "lesson": 5, "topic": "Occupations", "outcome": "Ask and answer about jobs: What does your mother do? Where does she work?"},
+    {"unit": 6, "lesson": 6, "topic": "Occupations", "outcome": "Review and practise Unit 6: jobs vocabulary, describing roles, future plans"},
+    {"unit": 7, "lesson": 1, "topic": "Movies", "outcome": "Name film genres and describe them: An action film is exciting, A comedy makes you laugh"},
+    {"unit": 7, "lesson": 2, "topic": "Movies", "outcome": "Give opinions about films: I think it was brilliant, I found it boring, The acting was great"},
+    {"unit": 7, "lesson": 3, "topic": "Movies", "outcome": "Use comparative adjectives: more exciting than, funnier than, scarier than"},
+    {"unit": 7, "lesson": 4, "topic": "Movies", "outcome": "Describe a film plot using past simple: The story was about, The hero saved, In the end"},
+    {"unit": 7, "lesson": 5, "topic": "Movies", "outcome": "Recommend a film and explain why someone should watch it"},
+    {"unit": 7, "lesson": 6, "topic": "Movies", "outcome": "Review and practise Unit 7: film genres, opinions, comparative adjectives"},
+    {"unit": 8, "lesson": 1, "topic": "Music", "outcome": "Name music genres: pop, rock, classical, jazz, folk, hip hop, electronic"},
+    {"unit": 8, "lesson": 2, "topic": "Music", "outcome": "Name instruments and say who plays them: a guitarist plays the guitar, a pianist plays the piano"},
+    {"unit": 8, "lesson": 3, "topic": "Music", "outcome": "Talk about music preferences using like, love, prefer, cannot stand"},
+    {"unit": 8, "lesson": 4, "topic": "Music", "outcome": "Use superlative adjectives: the best song, the most popular band, the greatest musician"},
+    {"unit": 8, "lesson": 5, "topic": "Music", "outcome": "Describe your favourite musician or band and explain what makes their music special"},
+    {"unit": 8, "lesson": 6, "topic": "Music", "outcome": "Review and practise Unit 8: music genres, instruments, superlatives"},
+]
