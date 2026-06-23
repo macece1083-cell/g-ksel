@@ -8,10 +8,10 @@ from googleapiclient.http import MediaFileUpload
 from .config import ROOT, Settings
 from .models import VideoPlan
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+SCOPES = ["https://www.googleapis.com/auth/youtube"]
 
 
-def upload_video(video_path: Path, plan: VideoPlan, settings: Settings) -> str:
+def upload_video(video_path: Path, plan: VideoPlan, settings: Settings, playlist_id: str = "") -> str:
     client_secrets = ROOT / settings.youtube_client_secrets
     token_file = ROOT / settings.youtube_token_file
     if not token_file.exists():
@@ -41,4 +41,17 @@ def upload_video(video_path: Path, plan: VideoPlan, settings: Settings) -> str:
         media_body=MediaFileUpload(str(video_path), chunksize=-1, resumable=True),
     )
     response = request.execute()
-    return f"https://www.youtube.com/watch?v={response['id']}"
+    video_id = response["id"]
+
+    if playlist_id:
+        youtube.playlistItems().insert(
+            part="snippet",
+            body={
+                "snippet": {
+                    "playlistId": playlist_id,
+                    "resourceId": {"kind": "youtube#video", "videoId": video_id},
+                }
+            },
+        ).execute()
+
+    return f"https://www.youtube.com/watch?v={video_id}"

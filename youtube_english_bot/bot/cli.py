@@ -1,11 +1,12 @@
-import argparse
+﻿import argparse
 import json
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import Settings, output_dir
 from .content import create_video_plan
+from .curriculum import get_lesson
 from .images import generate_images
 from .tts import generate_voice
 from .video import compose_video
@@ -13,18 +14,28 @@ from .youtube import upload_video
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate English learning videos for YouTube.")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--level", default="A1", choices=["A1", "A2", "B1", "B2", "C1", "C2"])
-    parser.add_argument("--topic", default="daily vocabulary")
+    parser.add_argument("--topic", default="auto")
+    parser.add_argument("--mode", default="general", choices=["general", "meb"])
     parser.add_argument("--upload", action="store_true")
-    parser.add_argument("--no-images", action="store_true", help="Use local placeholder images instead of AI image API.")
+    parser.add_argument("--playlist", default="")
+    parser.add_argument("--day", type=int, default=0)
     args = parser.parse_args()
 
     settings = Settings()
-    if args.no_images:
-        settings = Settings(image_provider="placeholder")
 
-    plan = create_video_plan(args.level, args.topic, settings)
+    if args.mode == "meb":
+        day = args.day or (datetime.now(timezone.utc).timetuple().tm_yday)
+        lesson = get_lesson(day)
+        topic = f"MEB 5th grade Unit {lesson['unit']}: {lesson['topic']} - {lesson['outcome']}"
+        level = "A1"
+        print(f"MEB Dersi: {topic}")
+    else:
+        topic = args.topic
+        level = args.level
+
+    plan = create_video_plan(level, topic, settings)
     run_dir = output_dir() / f"{datetime.now():%Y%m%d_%H%M%S}_{_slug(plan.level + '_' + plan.topic)}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -42,7 +53,7 @@ def main() -> None:
     print(f"Video hazir: {video}")
 
     if args.upload:
-        url = upload_video(video, plan, settings)
+        url = upload_video(video, plan, settings, playlist_id=args.playlist)
         print(f"YouTube yuklendi: {url}")
 
 
