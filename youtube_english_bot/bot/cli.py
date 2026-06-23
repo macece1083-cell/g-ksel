@@ -1,4 +1,4 @@
-﻿import argparse
+import argparse
 import json
 import re
 from datetime import datetime, timezone
@@ -12,12 +12,19 @@ from .tts import generate_voice
 from .video import compose_video
 from .youtube import upload_video
 
+MEB_MODES = {
+    "meb":  {"grade": 5, "level": "A1", "label": "5th grade"},
+    "meb6": {"grade": 6, "level": "A2", "label": "6th grade"},
+    "meb7": {"grade": 7, "level": "A2", "label": "7th grade"},
+    "lgs8": {"grade": 8, "level": "B1", "label": "8th grade LGS"},
+}
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", default="A1", choices=["A1", "A2", "B1", "B2", "C1", "C2"])
     parser.add_argument("--topic", default="auto")
-    parser.add_argument("--mode", default="general", choices=["general", "meb"])
+    parser.add_argument("--mode", default="general", choices=["general", "meb", "meb6", "meb7", "lgs8"])
     parser.add_argument("--upload", action="store_true")
     parser.add_argument("--playlist", default="")
     parser.add_argument("--day", type=int, default=0)
@@ -25,11 +32,12 @@ def main() -> None:
 
     settings = Settings()
 
-    if args.mode == "meb":
+    if args.mode in MEB_MODES:
+        cfg = MEB_MODES[args.mode]
         day = args.day if args.day > 0 else datetime.now(timezone.utc).timetuple().tm_yday
-        lesson = get_lesson(day)
-        topic = f"MEB 5th grade Unit {lesson['unit']}: {lesson['topic']} - {lesson['outcome']}"
-        level = "A1"
+        lesson = get_lesson(day, grade=cfg["grade"])
+        topic = f"MEB {cfg['label']} Unit {lesson['unit']}: {lesson['topic']} - {lesson['outcome']}"
+        level = cfg["level"]
         print(f"MEB Dersi: {topic}")
     else:
         topic = args.topic
