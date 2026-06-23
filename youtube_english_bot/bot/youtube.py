@@ -1,7 +1,7 @@
-from pathlib import Path
+﻿from pathlib import Path
 
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
@@ -14,18 +14,16 @@ SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 def upload_video(video_path: Path, plan: VideoPlan, settings: Settings) -> str:
     client_secrets = ROOT / settings.youtube_client_secrets
     token_file = ROOT / settings.youtube_token_file
-    if not client_secrets.exists():
-        raise FileNotFoundError(
-            f"YouTube OAuth dosyasi bulunamadi: {client_secrets}. Google Cloud'dan indirip bu adla kaydedin."
-        )
+    if not token_file.exists():
+        raise FileNotFoundError(f"token.json bulunamadi: {token_file}")
 
-    creds = None
-    if token_file.exists():
-        creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
-    if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file(str(client_secrets), SCOPES)
-        creds = flow.run_local_server(port=0)
-        token_file.write_text(creds.to_json(), encoding="utf-8")
+    creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
+    if not creds.valid:
+        if creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            token_file.write_text(creds.to_json(), encoding="utf-8")
+        else:
+            raise RuntimeError("YouTube credentials gecersiz, token.json'u yenileyin.")
 
     youtube = build("youtube", "v3", credentials=creds)
     body = {
