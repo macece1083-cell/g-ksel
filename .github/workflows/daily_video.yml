@@ -42,18 +42,20 @@ jobs:
       - name: Write .env
         working-directory: youtube_english_bot
         env:
-          TTSMAKER_API_KEY: ${{ secrets.TTSMAKER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TTSMAKER_API_KEY: ${{ secrets.TTSMAKER_API_KEY }}
         run: |
           printf '%s\n' "BOT_PROVIDER=claude" > .env
           printf '%s\n' "TTS_PROVIDER=gtts" >> .env
-          printf '%s\n' "IMAGE_PROVIDER=pollinations" >> .env
+          printf '%s\n' "IMAGE_PROVIDER=gemini" >> .env
           printf '%s\n' "VIDEO_WIDTH=1920" >> .env
           printf '%s\n' "VIDEO_HEIGHT=1080" >> .env
           printf '%s\n' "DEFAULT_PRIVACY_STATUS=private" >> .env
           printf '%s\n' "YOUTUBE_CLIENT_SECRETS=client_secret.json" >> .env
           printf '%s\n' "YOUTUBE_TOKEN_FILE=token.json" >> .env
           printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY" >> .env
+          printf 'GEMINI_API_KEY=%s\n' "$GEMINI_API_KEY" >> .env
           printf 'TTSMAKER_API_KEY=%s\n' "$TTSMAKER_API_KEY" >> .env
 
       - name: Restore YouTube credentials

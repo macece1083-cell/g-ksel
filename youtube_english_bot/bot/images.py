@@ -1,90 +1,95 @@
-from pathlib import Path
-from urllib.parse import quote
-
+﻿import os
+import time
+import urllib.parse
 import requests
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
+import io
 
 from .config import Settings
-from .models import VideoPlan
 
 
-def generate_images(plan: VideoPlan, workdir: Path, settings: Settings) -> list[Path]:
-    paths: list[Path] = []
-    for index, slide in enumerate(plan.slides, start=1):
-        path = workdir / f"slide_{index:02d}.jpg"
-        if settings.image_provider.lower() == "pollinations":
-            _download_pollinations(slide.visual_prompt, path, settings)
+def generate_image(prompt: str, output_path: Path, settings: Settings) -> Path:
+    if settings.image_provider.lower() == "gemini":
+        result = _gemini_image(prompt, output_path, settings)
+        if result:
+            return result
+    return _pollinations_image(prompt, output_path, settings)
+
+
+def _gemini_image(prompt: str, output_path: Path, settings: Settings) -> Path | None:
+    try:
+        enhanced = (
+            f"{prompt}, educational style, clean modern design, "
+            f"professional, vibrant colors, high quality"
+        )
+        url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict"
+        payload = {
+            "instances": [{"prompt": enhanced}],
+            "parameters": {"sampleCount": 1, "aspectRatio": "16:9"},
+        }
+        resp = requests.post(
+            url,
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            params={"key": settings.gemini_api_key},
+            timeout=60,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            img_b64 = data["predictions"][0]["bytesBase64Encoded"]
+            import base64
+            img_bytes = base64.b64decode(img_b64)
+            img = Image.open(io.BytesIO(img_bytes))
+            img = img.resize((settings.video_width, settings.video_height))
+            img.save(str(output_path))
+            print(f"  Gemini gorsel: {output_path.name}")
+            return output_path
         else:
-            _placeholder_image(slide.visual_prompt, path, settings)
-        _add_caption(path, slide.caption, plan.level, settings)
-        paths.append(path)
-    return paths
+            print(f"  Gemini hata {resp.status_code}: {resp.text[:200]}")
+            return None
+    except Exception as e:
+        print(f"  Gemini kullanilamadi: {e}")
+        return None
 
 
-def _download_pollinations(prompt: str, path: Path, settings: Settings) -> None:
-    encoded = quote(prompt)
+def _pollinations_image(prompt: str, output_path: Path, settings: Settings) -> Path:
+    enhanced = (
+        f"{prompt}, educational style, clean modern design, "
+        f"professional, vibrant colors, high quality, 4K"
+    )
+    encoded = urllib.parse.quote(enhanced)
     url = (
         f"https://image.pollinations.ai/prompt/{encoded}"
         f"?width={settings.video_width}&height={settings.video_height}&nologo=true&enhance=true"
     )
-    response = requests.get(url, timeout=90)
-    response.raise_for_status()
-    path.write_bytes(response.content)
-
-
-def _placeholder_image(prompt: str, path: Path, settings: Settings) -> None:
-    image = Image.new("RGB", (settings.video_width, settings.video_height), "#243447")
-    draw = ImageDraw.Draw(image)
-    title_font = _font(82)
-    body_font = _font(44)
-    draw.rectangle([80, 80, settings.video_width - 80, settings.video_height - 80], outline="#f6c445", width=8)
-    draw.text((140, 170), "English Practice", font=title_font, fill="white")
-    draw.line([140, 280, 680, 280], fill="#f6c445", width=8)
-    for idx, line in enumerate(_wrap(prompt, 52)[:4]):
-        draw.text((140, 340 + idx * 66), line, font=body_font, fill="#dbe7f0")
-    image.save(path, quality=92)
-
-
-def _add_caption(path: Path, caption: str, level: str, settings: Settings) -> None:
-    image = Image.open(path).convert("RGB").resize((settings.video_width, settings.video_height))
-    draw = ImageDraw.Draw(image, "RGBA")
-    title_font = _font(74)
-    badge_font = _font(48)
-    lines = _wrap(caption, 34)
-    box_height = 150 + (len(lines) - 1) * 82
-    y0 = settings.video_height - box_height - 80
-    draw.rounded_rectangle([100, y0, settings.video_width - 100, settings.video_height - 80], radius=28, fill=(8, 18, 28, 205))
-    draw.rounded_rectangle([130, y0 + 30, 250, y0 + 110], radius=18, fill=(246, 196, 69, 245))
-    draw.text((157, y0 + 42), level, font=badge_font, fill=(20, 24, 28, 255))
-    for idx, line in enumerate(lines):
-        draw.text((290, y0 + 36 + idx * 82), line, font=title_font, fill=(255, 255, 255, 255))
-    image.save(path, quality=94)
-
-
-def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    candidates = [
-        "C:/Windows/Fonts/arialbd.ttf",
-        "C:/Windows/Fonts/arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-    ]
-    for candidate in candidates:
+    for attempt in range(3):
         try:
-            return ImageFont.truetype(candidate, size)
-        except OSError:
-            continue
-    return ImageFont.load_default()
+            resp = requests.get(url, timeout=60)
+            if resp.status_code == 200 and resp.headers.get("content-type", "").startswith("image"):
+                output_path.write_bytes(resp.content)
+                print(f"  Pollinations gorsel: {output_path.name}")
+                return output_path
+        except Exception as e:
+            print(f"  Deneme {attempt+1}/3: {e}")
+            time.sleep(2 ** attempt)
+    return _placeholder(output_path, settings)
 
 
-def _wrap(text: str, width: int) -> list[str]:
-    words = text.split()
-    lines: list[str] = []
-    current = ""
-    for word in words:
-        if len(f"{current} {word}".strip()) > width and current:
-            lines.append(current)
-            current = word
-        else:
-            current = f"{current} {word}".strip()
-    if current:
-        lines.append(current)
-    return lines[:3]
+def _placeholder(output_path: Path, settings: Settings) -> Path:
+    img = Image.new("RGB", (settings.video_width, settings.video_height), color=(30, 30, 50))
+    draw = ImageDraw.Draw(img)
+    draw.text((settings.video_width // 2, settings.video_height // 2), "English Learning",
+              fill=(255, 255, 255), anchor="mm")
+    img.save(str(output_path))
+    return output_path
+
+
+def generate_images(plan, run_dir: Path, settings: Settings) -> list[Path]:
+    paths = []
+    for i, slide in enumerate(plan.slides):
+        out = run_dir / f"slide_{i:02d}.jpg"
+        path = generate_image(slide.visual_prompt, out, settings)
+        paths.append(path)
+        time.sleep(0.5)
+    return paths
