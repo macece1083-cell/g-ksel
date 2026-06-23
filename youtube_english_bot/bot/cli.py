@@ -26,7 +26,7 @@ def main() -> None:
     settings = Settings()
 
     if args.mode == "meb":
-        day = args.day or (datetime.now(timezone.utc).timetuple().tm_yday)
+        day = args.day if args.day > 0 else datetime.now(timezone.utc).timetuple().tm_yday
         lesson = get_lesson(day)
         topic = f"MEB 5th grade Unit {lesson['unit']}: {lesson['topic']} - {lesson['outcome']}"
         level = "A1"
