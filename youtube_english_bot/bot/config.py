@@ -32,6 +32,9 @@ class Settings:
     default_privacy_status: str = os.getenv("DEFAULT_PRIVACY_STATUS", "private")
     youtube_client_secrets: str = os.getenv("YOUTUBE_CLIENT_SECRETS", "client_secret.json")
     youtube_token_file: str = os.getenv("YOUTUBE_TOKEN_FILE", "token.json")
+    instagram_access_token: str = os.getenv("INSTAGRAM_ACCESS_TOKEN", "")
+    instagram_user_id: str = os.getenv("INSTAGRAM_USER_ID", "")
+    imgbb_api_key: str = os.getenv("IMGBB_API_KEY", "")
 
 
 def output_dir() -> Path:

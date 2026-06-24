@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import json
 import re
 from datetime import datetime, timezone
@@ -8,6 +8,7 @@ from .config import Settings, output_dir
 from .content import create_video_plan
 from .curriculum import get_lesson
 from .images import generate_images
+from .instagram import create_instagram_image, post_to_instagram
 from .tts import generate_voice
 from .video import compose_video
 from .youtube import upload_video
@@ -26,6 +27,7 @@ def main() -> None:
     parser.add_argument("--topic", default="auto")
     parser.add_argument("--mode", default="general", choices=["general", "meb", "meb6", "meb7", "lgs8"])
     parser.add_argument("--upload", action="store_true")
+    parser.add_argument("--instagram", action="store_true")
     parser.add_argument("--playlist", default="")
     parser.add_argument("--day", type=int, default=0)
     args = parser.parse_args()
@@ -60,9 +62,25 @@ def main() -> None:
     video = compose_video(images, audio, run_dir / "video.mp4", settings)
     print(f"Video hazir: {video}")
 
+    youtube_url = ""
     if args.upload:
-        url = upload_video(video, plan, settings, playlist_id=args.playlist)
-        print(f"YouTube yuklendi: {url}")
+        youtube_url = upload_video(video, plan, settings, playlist_id=args.playlist)
+        print(f"YouTube yuklendi: {youtube_url}")
+
+    if args.instagram and settings.instagram_access_token and settings.instagram_user_id:
+        ig_image = create_instagram_image(plan, run_dir)
+        print(f"Instagram gorseli hazir: {ig_image}")
+        post_id = post_to_instagram(
+            plan=plan,
+            image_path=ig_image,
+            ig_token=settings.instagram_access_token,
+            ig_user_id=settings.instagram_user_id,
+            imgbb_api_key=settings.imgbb_api_key,
+            youtube_url=youtube_url,
+        )
+        print(f"Instagram post atildi: {post_id}")
+    elif args.instagram:
+        print("Instagram ayarlari eksik, post atlamiyor.")
 
 
 def _slug(value: str) -> str:
