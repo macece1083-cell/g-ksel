@@ -182,26 +182,6 @@ jobs:
               --upload
           fi
 
-      - name: Post to Instagram
-        if: ${{ github.event.inputs.instagram == 'true' || github.event_name == 'schedule' }}
-        working-directory: youtube_english_bot
-        run: |
-          MODE="${{ steps.params.outputs.mode }}"
-          if [ "$MODE" != "general" ]; then
-            python main.py \
-              --mode "$MODE" \
-              --level "${{ steps.params.outputs.level }}" \
-              --topic "auto" \
-              --day "${{ steps.counter.outputs.value || 1 }}" \
-              --instagram
-          else
-            python main.py \
-              --mode "general" \
-              --level "${{ steps.params.outputs.level }}" \
-              --topic "${{ steps.params.outputs.topic }}" \
-              --instagram
-          fi
-
       - name: Update counter
         if: ${{ steps.params.outputs.mode != 'general' && (github.event.inputs.upload == 'true' || github.event_name == 'schedule') }}
         run: |
