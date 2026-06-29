@@ -43,7 +43,12 @@ def main() -> None:
         print(f"MEB Dersi: {topic}")
     else:
         topic = args.topic
-        level = args.level
+        if args.level == "A1":
+            levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
+            level = levels[datetime.now(timezone.utc).timetuple().tm_yday % len(levels)]
+            print(f"General mod seviyesi: {level}")
+        else:
+            level = args.level
 
     plan = create_video_plan(level, topic, settings)
     run_dir = output_dir() / f"{datetime.now():%Y%m%d_%H%M%S}_{_slug(plan.level + '_' + plan.topic)}"
