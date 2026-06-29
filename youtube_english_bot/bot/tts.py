@@ -1,7 +1,4 @@
-﻿import asyncio
-import subprocess
-import tempfile
-from pathlib import Path
+﻿from pathlib import Path
 
 import requests
 
@@ -11,7 +8,10 @@ from .models import VideoPlan
 
 def generate_voice(plan: VideoPlan, output: Path, settings: Settings) -> Path:
     text = "\n".join(slide.narration for slide in plan.slides)
-    if settings.tts_provider.lower() == "ttsmaker":
+    provider = settings.tts_provider.lower()
+    if provider == "minimax":
+        _save_minimax(text, output, settings)
+    elif provider == "ttsmaker":
         _save_ttsmaker(text, output, settings)
     else:
         try:
@@ -26,6 +26,41 @@ def _save_gtts(text: str, output: Path) -> None:
     from gtts import gTTS
     tts = gTTS(text=text, lang="en", slow=False)
     tts.save(str(output))
+
+
+def _save_minimax(text: str, output: Path, settings: Settings) -> None:
+    if not settings.minimax_api_key:
+        raise RuntimeError("TTS_PROVIDER=minimax icin .env dosyasinda MINIMAX_API_KEY gerekli.")
+    url = "https://api.minimaxi.chat/v1/t2a_v2"
+    headers = {
+        "Authorization": f"Bearer {settings.minimax_api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": settings.minimax_model,
+        "text": text,
+        "stream": False,
+        "voice_setting": {
+            "voice_id": settings.minimax_voice_id,
+            "speed": settings.minimax_speed,
+            "vol": settings.minimax_vol,
+            "pitch": 0,
+        },
+        "audio_setting": {
+            "sample_rate": 32000,
+            "bitrate": 128000,
+            "format": "mp3",
+        },
+    }
+    response = requests.post(url, json=payload, headers=headers, timeout=120)
+    response.raise_for_status()
+    data = response.json()
+    if data.get("base_resp", {}).get("status_code", 0) != 0:
+        raise RuntimeError(f"MiniMax hata: {data['base_resp'].get('status_msg')}")
+    audio_hex = data.get("data", {}).get("audio")
+    if not audio_hex:
+        raise RuntimeError("MiniMax ses verisi dondurmedi.")
+    output.write_bytes(bytes.fromhex(audio_hex))
 
 
 def _save_ttsmaker(text: str, output: Path, settings: Settings) -> None:

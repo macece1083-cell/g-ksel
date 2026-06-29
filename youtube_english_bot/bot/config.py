@@ -35,6 +35,11 @@ class Settings:
     instagram_access_token: str = os.getenv("INSTAGRAM_ACCESS_TOKEN", "")
     instagram_user_id: str = os.getenv("INSTAGRAM_USER_ID", "")
     imgbb_api_key: str = os.getenv("IMGBB_API_KEY", "")
+    minimax_api_key: str = os.getenv("MINIMAX_API_KEY", "")
+    minimax_model: str = os.getenv("MINIMAX_MODEL", "speech-02-hd")
+    minimax_voice_id: str = os.getenv("MINIMAX_VOICE_ID", "English_expressive_narrator")
+    minimax_speed: float = float(os.getenv("MINIMAX_SPEED", "1.0"))
+    minimax_vol: float = float(os.getenv("MINIMAX_VOL", "1.0"))
 
 
 def output_dir() -> Path:
