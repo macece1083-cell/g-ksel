@@ -1,9 +1,18 @@
-﻿from pathlib import Path
+﻿import random
+from pathlib import Path
 
 import requests
 
 from .config import Settings
 from .models import VideoPlan
+
+MINIMAX_VOICES = [
+    "English_expressive_narrator",
+    "English_cheerful_female",
+    "English_trustworthy_male",
+    "English_young_female_voice",
+    "English_male_deep_voice",
+]
 
 
 def generate_voice(plan: VideoPlan, output: Path, settings: Settings) -> Path:
@@ -41,7 +50,7 @@ def _save_minimax(text: str, output: Path, settings: Settings) -> None:
         "text": text,
         "stream": False,
         "voice_setting": {
-            "voice_id": settings.minimax_voice_id,
+            "voice_id": settings.minimax_voice_id or random.choice(MINIMAX_VOICES),
             "speed": settings.minimax_speed,
             "vol": settings.minimax_vol,
             "pitch": 0,
